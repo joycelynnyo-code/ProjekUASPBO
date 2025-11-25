@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rock Paper Scissors (OOP)</title>
+<style>
+body {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: bisque;
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+h1 { color: #7d2ae8; }
+.mode_buttons, .option_buttons {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 1rem;
+}
+button {
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #f0e9ff;
+  transition: 0.3s;
+}
+button:hover {
+  background: #d3b8ff;
+  transform: scale(1.05);
+}
+.result_icons {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-size: 4rem;
+  margin-top: 0.5rem;
+}
+.shake { animation: shake 0.6s; }
+@keyframes shake {
+  25% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+  75% { transform: translateX(-10px); }
+}
+.result {
+  font-size: 1.4rem;
+  font-weight: bold;
+  min-height: 2rem;
+  color: #7d2ae8;
+}
+.scoreboard {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+</style>
+</head>
+<body>
+<section class="container">
+<h1>Rock Paper Scissors (OOP)</h1>
+
+<div class="mode_buttons">
+  <button id="mode_bot">👾 Lawan Bot</button>
+  <button id="mode_friend">👥 Lawan Temen</button>
+</div>
+
+<div class="scoreboard">
+  <div>Elu: <span id="p1_score">0</span></div>
+  <div><span id="p2_label">Bot</span>: <span id="p2_score">0</span></div>
+</div>
+
+<div class="result_icons">
+  <span id="user_result">❓</span>
+  <span id="opponent_result">❓</span>
+</div>
+<div id="result_text" class="result">Pilih mode dulu!!!</div>
+
+<div class="option_buttons" id="options">
+  <button class="option_btn" data-choice="rock">✊ Rock</button>
+  <button class="option_btn" data-choice="paper">✋ Paper</button>
+  <button class="option_btn" data-choice="scissors">✌️ Scissors</button>
+</div>
+</section>
+
+<script>
+// ======= Classes sesuai UML ======= //
+class Move {
+  constructor(name) { this.name = name; }
+  beats(other) {
+    return (this.name === "rock" && other.name === "scissors") ||
+           (this.name === "paper" && other.name === "rock") ||
+           (this.name === "scissors" && other.name === "paper");
+  }
+}
+
+class Player {
+  constructor(name) {
+    this.name = name;
+    this.score = 0;
+  }
+  chooseMove(choice) { return new Move(choice); }
+  gainXP(points) { this.score += points; }
+}
+
+class GameMode {
+  constructor(modeName) { this.modeName = modeName; }
+  startMode() {}
+}
+
+class BotMode extends GameMode {
+  constructor() { super("Bot Mode"); }
+  opponentMove() {
+    const c = ["rock","paper","scissors"];
+    return new Move(c[Math.floor(Math.random()*3)]);
+  }
+}
+
+class FriendMode extends GameMode {
+  constructor() { super("Friend Mode"); this.tempMove = null; }
+}
+
+class Game {
+  constructor(player1, player2, mode) {
+    this.player1 = player1;
+    this.player2 = player2;
+    this.mode = mode;
+  }
+
+  playRound(move1, move2) {
+    if (move1.name === move2.name) return "draw";
+    if (move1.beats(move2)) return "p1";
+    return "p2";
+  }
+}
+
+// ======= DOM Logika ======= //
+const userResult = document.getElementById("user_result");
+const opponentResult = document.getElementById("opponent_result");
+const resultText = document.getElementById("result_text");
+const p1ScoreEl = document.getElementById("p1_score");
+const p2ScoreEl = document.getElementById("p2_score");
+const p2Label = document.getElementById("p2_label");
+const optionButtons = document.querySelectorAll(".option_btn");
+const modeBotBtn = document.getElementById("mode_bot");
+const modeFriendBtn = document.getElementById("mode_friend");
+
+let currentGame = null;
+let tempChoice = null;
+
+const emojis = { rock: "✊", paper: "✋", scissors: "✌️" };
+
+modeBotBtn.addEventListener("click", () => {
+  currentGame = new Game(new Player("Elu"), new Player("Bot"), new BotMode());
+  p2Label.textContent = "Bot";
+  resetUI();
+  resultText.textContent = "Maen lawan Bot!";
+});
+
+modeFriendBtn.addEventListener("click", () => {
+  currentGame = new Game(new Player("Elu"), new Player("Temen"), new FriendMode());
+  p2Label.textContent = "Temen lu";
+  resetUI();
+  resultText.textContent = "Gas bro, maenkan!";
+});
+
+optionButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (!currentGame) {
+      alert("Pilih mode dulu!");
+      return;
+    }
+    const choice = btn.dataset.choice;
+    const p1Move = currentGame.player1.chooseMove(choice);
+    
+    if (currentGame.mode instanceof BotMode) {
+      playBotRound(p1Move);
+    } else if (currentGame.mode instanceof FriendMode) {
+      playFriendRound(p1Move);
+    }
+  });
+});
+
+function playBotRound(p1Move) {
+  animateHands();
+  setTimeout(() => {
+    const p2Move = currentGame.mode.opponentMove();
+    userResult.textContent = emojis[p1Move.name];
+    opponentResult.textContent = emojis[p2Move.name];
+    handleResult(p1Move, p2Move);
+  }, 600);
+}
+
+function playFriendRound(p1Move) {
+  const mode = currentGame.mode;
+  if (!mode.tempMove) {
+    mode.tempMove = p1Move;
+    resultText.textContent = "Giliran temen lu!";
+    userResult.textContent = "❓";
+    opponentResult.textContent = "❓";
+  } else {
+    animateHands();
+    setTimeout(() => {
+      const p2Move = p1Move;
+      const p1Choice = mode.tempMove;
+      userResult.textContent = emojis[p1Choice.name];
+      opponentResult.textContent = emojis[p2Move.name];
+      handleResult(p1Choice, p2Move);
+      mode.tempMove = null;
+    }, 600);
+  }
+}
+
+function handleResult(p1Move, p2Move) {
+  const res = currentGame.playRound(p1Move, p2Move);
+  if (res === "draw") {
+    resultText.textContent = "Seri! Chemistry mantap!";
+    resultText.style.color = "#666";
+  } else if (res === "p1") {
+    resultText.textContent = "Elu menang! 🔥";
+    resultText.style.color = "green";
+    currentGame.player1.gainXP(1);
+  } else {
+    resultText.textContent = currentGame.player2.name + " menang!";
+    resultText.style.color = "red";
+    currentGame.player2.gainXP(1);
+  }
+  updateScoreboard();
+}
+
+function updateScoreboard() {
+  p1ScoreEl.textContent = currentGame.player1.score;
+  p2ScoreEl.textContent = currentGame.player2.score;
+}
+
+function animateHands() {
+  userResult.classList.add("shake");
+  opponentResult.classList.add("shake");
+  resultText.textContent = "Suit...";
+  resultText.style.color = "#7d2ae8";
+  setTimeout(() => {
+    userResult.classList.remove("shake");
+    opponentResult.classList.remove("shake");
+  }, 600);
+}
+
+function resetUI() {
+  userResult.textContent = "❓";
+  opponentResult.textContent = "❓";
+  p1ScoreEl.textContent = 0;
+  p2ScoreEl.textContent = 0;
+  resultText.style.color = "#7d2ae8";
+}
+</script>
+</body>
+</html>
