@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rock, Paper, Scissors</title>
+<style>
+:root {
+    --primary: #6200ea;
+    --primary-light: #b388ff;
+    --secondary-bg: #ede7f6;
+    --text-dark: #37474f;
+    --energy-start: #ffd700;
+    --energy-end: #ff8f00;
+    --special-btn-bg: #ff4081;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    min-height: 100vh;
+    color: var(--text-dark);
+}
+
+.container {
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(50,50,93,0.1), 0 5px 15px rgba(0,0,0,0.07);
+    width: 100%;
+    max-width: 850px;
+    text-align: center;
+}
+
+h1 { color: var(--primary); margin-bottom: 0.5rem; font-weight: 800; }
+h3 { margin: 0.5rem 0 1.5rem 0; color: #78909c; font-weight: 600; }
+
+.mode-selection { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
+.btn-mode { background: var(--primary-light); color: white; font-size: 1rem; }
+.btn-mode.active { background: var(--primary); box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+
+/* Stats Area */
+.game-stats {
+    display: flex; justify-content: space-between; margin-bottom: 2rem;
+    padding: 1.2rem; background: var(--secondary-bg);
+    border-radius: 15px; border: 2px solid #d1c4e9;
+}
+.player-stat { text-align: left; width: 48%; }
+.p2-stat { text-align: right;}
+.score { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+
+.energy-container {
+    background: #cfd8dc; border-radius: 10px; height: 14px;
+    width: 100%; margin-top: 8px; overflow: hidden;
+}
+.energy-bar {
+    height: 100%; background: linear-gradient(90deg, var(--energy-start), var(--energy-end));
+    transition: width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+
+.result_icons { display: flex; justify-content: center; gap: 3rem; font-size: 5rem; margin: 1.5rem 0; }
+.result-text {
+    font-size: 1.4rem; font-weight: bold; color: var(--primary);
+    min-height: 1.5em; padding: 10px; background: rgba(98, 0, 234, 0.05);
+    border-radius: 10px;
+}
+
+.controls-area {
+    display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;
+    border-top: 3px solid #eceff1; padding-top: 1.5rem;
+}
+.control-group h4 { 
+    margin: 0 0 0.8rem 0; text-align: left; color: var(--text-dark);
+    text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;
+}
+.button-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+button {
+    cursor: pointer; padding: 1rem 1.4rem; border: none; border-radius: 12px;
+    font-weight: 700; transition: all 0.3s ease; display: flex;
+    flex-direction: column; align-items: center; min-width: 90px;
+}
+button:hover { transform: translateY(-3px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; filter: grayscale(100%); }
+
+.btn-normal { background: #fff; color: var(--text-dark); border: 2px solid #cfd8dc; border-bottom: 4px solid #b0bec5; }
+.btn-powerup { background: linear-gradient(135deg, #00bcd4, #0277bd); color: white; }
+
+/*Style Special Move*/
+.btn-special {
+    background: linear-gradient(135deg, #ff4081, #c51162);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(233, 30, 99, 0.3);
+}
+.btn-special small { font-size: 0.7rem; font-weight: normal; margin-top: 4px; opacity: 0.9; }
+.cooldown-text { color: red; font-size: 0.8rem; }
+
+.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+</style>
+</head>
+<body>
+
+<section class="container">
+  <h1>Rock, Papper, Scissors</h1>
+  <h3 id="mode_label">Pilih Mode Permainan</h3>
+
+  <div class="mode-selection">
+      <button class="btn-mode" id="btn_bot_mode">🤖 Lawan Bot</button>
+      <button class="btn-mode" id="btn_friend_mode">👥 Lawan Teman</button>
+  </div>
+
+  <div class="game-stats">
+      <div class="player-stat">
+          <div>👤 Player 1</div>
+          <div class="score">Score: <span id="p1_score">0</span></div>
+          <div>Energy: <span id="p1_energy_txt">10</span>/10</div>
+          <div class="energy-container"><div id="p1_energy_bar" class="energy-bar" style="width: 100%"></div></div>
+      </div>
+      <div class="player-stat p2-stat">
+          <div id="p2_name_label">🤖 Bot</div>
+          <div class="score">Score: <span id="p2_score">0</span></div>
+      </div>
+  </div>
+
+  <div class="result_icons">
+    <span id="p1_move_icon">❓</span>
+    <span id="p2_move_icon">❓</span>
+  </div>
+  <div id="result_text" class="result-text">Pilih mode untuk memulai!</div>
+
+  <div class="controls-area" id="controls_area" style="display: none;"> 
+      
+      <div class="control-group">
+          <h4>Gerakan Dasar (Cost: 0 Energy)</h4>
+          <div class="button-row">
+              <button class="btn-normal" onclick="makeMove('rock')">✊ Rock</button>
+              <button class="btn-normal" onclick="makeMove('paper')">✋ Paper</button>
+              <button class="btn-normal" onclick="makeMove('scissors')">✌️ Scissors</button>
+          </div>
+      </div>
+
+      <div class="control-group">
+          <h4>🔥 Jurus Spesial (High Cost / Cooldown)</h4>
+          <div class="button-row">
+              <button class="btn-special" id="btn_giant_rock" onclick="makeMove('giant_rock')">
+                  🪨 Batu Raksasa
+                  <small>Cost: 6 | CD: 3 Turn</small>
+              </button>
+              <button class="btn-special" id="btn_thousand_paper" onclick="makeMove('thousand_paper')">
+                  📄 Kertas Seribu
+                  <small>Cost: 4 | 2x Points</small>
+              </button>
+              <button class="btn-special" id="btn_twin_scissors" onclick="makeMove('twin_scissors')">
+                  ⚔️ Gunting Kembar
+                  <small>Cost: 3 | Anti-Kalah</small>
+              </button>
+          </div>
+      </div>
+
+       <div class="control-group" id="powerup_group">
+        <h4>Inventory PowerUps</h4>
+        <div id="powerup_status" style="color: #0277bd; font-weight: bold; height: 1.2em;"></div>
+        <div class="button-row" id="powerup_buttons"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+
+// --- Class Definitions ---
+class Move {
+    constructor(name, energyCost, cooldownTime = 0) {
+        this.name = name;
+        this.energyCost = energyCost;
+        this.cooldownTime = cooldownTime;
+        this.pointMultiplier = 1;
+        this.isSafeOnLoss = false; 
+    }
+    
+    beats(otherMove) {
+        const myBase = this.getBaseName();
+        const otherBase = otherMove.getBaseName();
+        
+        return (myBase === "rock" && otherBase === "scissors") ||
+               (myBase === "paper" && otherBase === "rock") ||
+               (myBase === "scissors" && otherBase === "paper");
+    }
+
+    getBaseName() {
+        if(this.name.includes("rock")) return "rock";
+        if(this.name.includes("paper")) return "paper";
+        if(this.name.includes("scissors")) return "scissors";
+        return this.name;
+    }
+
+    getEmoji() {
+        if(this.name === "giant_rock") return "🪨";
+        if(this.name === "thousand_paper") return "📜";
+        if(this.name === "twin_scissors") return "⚔️";
+        const map = { rock: "✊", paper: "✋", scissors: "✌️" };
+        return map[this.getBaseName()];
+    }
+}
+
+class NormalMove extends Move { constructor(name) { super(name, 0); } }
+
+class GiantRock extends Move {
+    constructor() { super("giant_rock", 6, 3); }
+    beats(otherMove) {
+        const otherBase = otherMove.getBaseName();
+        if (otherBase === "scissors" || otherBase === "paper") return true;
+        return false;
+    }
+}
+
+class ThousandPaper extends Move {
+    constructor() { 
+        super("thousand_paper", 4, 0); 
+        this.pointMultiplier = 2; 
+    }
+}
+
+class TwinScissors extends Move {
+    constructor() {
+        super("twin_scissors", 3, 0); 
+        this.isSafeOnLoss = true;
+    }
+}
+
+// --- PowerUp Classes ---
+class PowerUp {
+    constructor(name) { this.name = name; }
+    activate(player) { }
+}
+class Shield extends PowerUp {
+    constructor() { super("Shield"); }
+    activate(player) { player.activeEffects.push("shield"); uiLog("🛡️ Shield activated!"); }
+}
+class Clairvoyance extends PowerUp {
+    constructor() { super("Clairvoyance"); }
+    activate(player) { player.gainEnergy(5); uiLog("🔮 Energy +5!"); }
+}
+class DoublePoints extends PowerUp {
+    constructor() { super("DoublePoints"); }
+    activate(player) {
+        player.activeEffects.push("doublepoints");
+        uiLog("✨ Double Points aktif! Menang berikutnya x2 Poin!");
+    }
+}
+
+// --- Player Class ---
+class Player {
+    constructor(name) {
+        this.name = name;
+        this.score = 0;
+        this.maxEnergy = 10;
+        this.energy = this.maxEnergy;
+        this.powerUps = []; 
+        this.activeEffects = [];
+        this.cooldowns = { giant_rock: 0 }; 
+    }
+
+    chooseMove(moveObj) {
+        // Cek Cooldown
+        if (this.cooldowns[moveObj.name] > 0) {
+            alert(`Jurus ${moveObj.name} sedang cooldown! Tunggu ${this.cooldowns[moveObj.name]} ronde.`);
+            return null; 
+        }
+
+        // Cek Energi
+        if (this.energy >= moveObj.energyCost) {
+            this.energy -= moveObj.energyCost;
+            
+            if (moveObj.cooldownTime > 0) {
+                this.cooldowns[moveObj.name] = moveObj.cooldownTime + 1; 
+            }
+            return moveObj;
+        } else {
+            alert("Energi tidak cukup!");
+            return null;
+        }
+    }
+
+    tickCooldowns() {
+        for (const [key, val] of Object.entries(this.cooldowns)) {
+            if (val > 0) this.cooldowns[key] -= 1;
+        }
+    }
+
+    gainXP(amount) { this.score += amount; }
+    gainEnergy(amount) { this.energy = Math.min(this.maxEnergy, this.energy + amount); }
+}
+
+// --- Game Logic ---
+class Game {
+    constructor() {
+        this.players = [new Player("Player 1"), new Player("Bot")];
+        this.mode = null;
+        this.round = 0;
+        this.isProcessing = false;
+        this.turn = 0;
+        this.tempMove = null; // Menampung gerakan P1 saat lawan teman
+    }
+
+    setMode(modeType) {
+        this.mode = modeType;
+        if(modeType === 'bot') {
+            this.players[1] = new Player("Bot CPU");
+            document.getElementById('p2_name_label').textContent = "🤖 Bot";
+        } else {
+            this.players[1] = new Player("Player 2");
+            document.getElementById('p2_name_label').textContent = "👤 Teman";
+        }
+        this.resetGame();
+    }
+
+    resetGame() {
+        this.players.forEach(p => { 
+            p.score = 0; p.energy = p.maxEnergy; p.activeEffects = []; p.cooldowns = { giant_rock: 0 }; 
+        });
+        this.players[0].powerUps = [new Shield(), new Clairvoyance()];
+        this.round = 0;
+        this.turn = 0;
+        this.tempMove = null;
+        updateUI();
+    }
+
+    // FUNGSI UTAMA YANG DIUBAH
+    handleInput(moveObj) {
+        if (this.isProcessing) return;
+
+        // --- MODE LAWAN TEMAN ---
+        if (this.mode === 'friend') {
+            if (!this.tempMove) {
+                // >> GILIRAN PLAYER 1
+                const validMove = this.players[0].chooseMove(moveObj);
+                if (!validMove) return; // Jika energi/cooldown tidak cukup
+
+                this.tempMove = validMove;
+                
+                // Update UI: Sembunyikan pilihan, minta Player 2 main
+                document.getElementById("result_text").textContent = "Giliran Player 2! (Pilihan P1 terkunci)";
+                document.getElementById("p1_move_icon").textContent = "🔒";
+                document.getElementById("p2_move_icon").textContent = "👤";
+                
+                // Kita return agar menunggu input kedua
+                return; 
+            } else {
+                // >> GILIRAN PLAYER 2
+                // Untuk Player 2 (Teman), kita anggap Free Energy agar tidak ribet UI-nya
+                // Atau validasi basic saja
+                const p1Move = this.tempMove;
+                const p2Move = moveObj; 
+                
+                this.tempMove = null; // Reset temp
+                this.playFriendRound(p1Move, p2Move);
+                return;
+            }
+        } 
+        
+        // --- MODE LAWAN BOT (Default) ---
+        else {
+            const validMove = this.players[0].chooseMove(moveObj);
+            if (!validMove) return;
+            this.playBotRound(validMove);
+        }
+    }
+
+    playFriendRound(p1Move, p2Move) {
+        this.isProcessing = true;
+        animateHands();
+        
+        setTimeout(() => {
+            this.resolveRound(p1Move, p2Move);
+        }, 600);
+    }
+
+    playBotRound(p1Move) {
+        this.isProcessing = true;
+        animateHands();
+
+        setTimeout(() => {
+            const botMoves = [new NormalMove("rock"), new NormalMove("paper"), new NormalMove("scissors")];
+            const p2Move = botMoves[Math.floor(Math.random() * botMoves.length)];
+            this.resolveRound(p1Move, p2Move);
+        }, 600);
+    }
+
+    resolveRound(move1, move2) {
+        document.getElementById("p1_move_icon").textContent = move1.getEmoji();
+        document.getElementById("p2_move_icon").textContent = move2.getEmoji();
+
+        const p1Wins = move1.beats(move2);
+        const p2Wins = move2.beats(move1);
+        let resultMsg = "";
+
+        if (p1Wins) {
+            const points = 1 * move1.pointMultiplier;
+            this.players[0].gainXP(points);
+            resultMsg = `Player 1 Menang! (+${points} XP) 🔥`;
+        } 
+        else if (p2Wins) {
+            if (move1.isSafeOnLoss) {
+                resultMsg = "Seri! Gunting Kembar menyelamatkanmu! 🛡️";
+            } else if (this.players[0].activeEffects.includes("shield")) {
+                resultMsg = "Shield aktif! Seri. 🛡️";
+                this.players[0].activeEffects = []; 
+            } else {
+                this.players[1].gainXP(1);
+                resultMsg = (this.mode === 'bot' ? "Bot" : "Player 2") + " Menang! 💀";
+            }
+        } 
+        else {
+            resultMsg = "Seri! 🤝";
+        }
+
+        // Regen Energi & Cooldown P1
+        this.players[0].gainEnergy(1);
+        this.players[0].tickCooldowns();
+        
+        document.getElementById("result_text").textContent = resultMsg;
+        this.isProcessing = false;
+        updateUI();
+    }
+}
+
+// --- UI Controller ---
+let myGame = new Game();
+
+const moveFactory = {
+    rock: () => new NormalMove("rock"),
+    paper: () => new NormalMove("paper"),
+    scissors: () => new NormalMove("scissors"),
+    giant_rock: () => new GiantRock(),
+    thousand_paper: () => new ThousandPaper(),
+    twin_scissors: () => new TwinScissors()
+};
+
+document.getElementById("btn_bot_mode").onclick = function() { 
+    myGame.setMode('bot'); 
+    startGameUI(); 
+};
+document.getElementById("btn_friend_mode").onclick = function() { 
+    myGame.setMode('friend'); 
+    startGameUI(); 
+};
+
+function startGameUI() {
+    document.getElementById("controls_area").style.display = "flex";
+    document.getElementById("result_text").textContent = "Mulai! Silakan Player 1 pilih.";
+    updateUI();
+}
+
+function makeMove(id) {
+    if(!myGame.mode) return;
+    myGame.handleInput(moveFactory[id]());
+}
+
+function updateUI() {
+    const p1 = myGame.players[0];
+    document.getElementById("p1_score").textContent = p1.score;
+    document.getElementById("p2_score").textContent = myGame.players[1].score;
+    
+    // Energy Bar
+    document.getElementById("p1_energy_txt").textContent = p1.energy;
+    document.getElementById("p1_energy_bar").style.width = (p1.energy*10) + "%";
+
+    // Cek tombol hanya untuk Player 1 (Visual)
+    // Saat giliran P2, semua tombol enabled (karena kita bypass cost P2)
+    // Tapi untuk konsistensi visual, kita biarkan logic checkButtonState berjalan berdasarkan P1
+    checkButtonState("btn_giant_rock", 6, p1.cooldowns.giant_rock);
+    checkButtonState("btn_thousand_paper", 4, 0);
+    checkButtonState("btn_twin_scissors", 3, 0);
+    
+    // Powerups
+    const pupDiv = document.getElementById("powerup_buttons");
+    pupDiv.innerHTML = "";
+    p1.powerUps.forEach((pup, i) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-powerup";
+        btn.textContent = pup.name;
+        btn.onclick = () => { p1.powerUps.splice(i,1)[0].activate(p1); updateUI(); };
+        pupDiv.appendChild(btn);
+    });
+}
+
+function checkButtonState(btnId, cost, cd) {
+    const btn = document.getElementById(btnId);
+    const p1 = myGame.players[0];
+    
+    if (cd > 0) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ Cooldown (${cd})`;
+    } else if (p1.energy < cost) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+    } else {
+        btn.disabled = false;
+        if(btnId.includes("giant")) btn.innerHTML = `🪨 Batu Raksasa<small>Cost: 6 | CD: 3 Turn</small>`;
+    }
+}
+
+function uiLog(msg) { document.getElementById("powerup_status").textContent = msg; }
+function animateHands() {
+    const p1 = document.getElementById("p1_move_icon");
+    const p2 = document.getElementById("p2_move_icon");
+    p1.className = p2.className = "shake";
+    p1.textContent = p2.textContent = "✊";
+    setTimeout(() => { p1.classList.remove("shake"); p2.classList.remove("shake"); }, 500);
+}
+</script>
+</body>
+</html>
