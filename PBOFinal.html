@@ -178,7 +178,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important;
 
 <script>
 
-// --- Class Definitions ---
+//Class List
 class Move {
     constructor(name, energyCost, cooldownTime = 0) {
         this.name = name;
@@ -238,7 +238,7 @@ class TwinScissors extends Move {
     }
 }
 
-// --- PowerUp Classes ---
+//Power-ups Fiture
 class PowerUp {
     constructor(name) { this.name = name; }
     activate(player) { }
@@ -259,7 +259,7 @@ class DoublePoints extends PowerUp {
     }
 }
 
-// --- Player Class ---
+//Player-
 class Player {
     constructor(name) {
         this.name = name;
@@ -302,7 +302,7 @@ class Player {
     gainEnergy(amount) { this.energy = Math.min(this.maxEnergy, this.energy + amount); }
 }
 
-// --- Game Logic ---
+//Logika Game
 class Game {
     constructor() {
         this.players = [new Player("Player 1"), new Player("Bot")];
@@ -310,7 +310,7 @@ class Game {
         this.round = 0;
         this.isProcessing = false;
         this.turn = 0;
-        this.tempMove = null; // Menampung gerakan P1 saat lawan teman
+        this.tempMove = null; //Gerakan P1 saat lawan teman
     }
 
     setMode(modeType) {
@@ -336,11 +336,10 @@ class Game {
         updateUI();
     }
 
-    // FUNGSI UTAMA YANG DIUBAH
     handleInput(moveObj) {
         if (this.isProcessing) return;
 
-        // --- MODE LAWAN TEMAN ---
+        // lawan Temen
         if (this.mode === 'friend') {
             if (!this.tempMove) {
                 // >> GILIRAN PLAYER 1
@@ -349,7 +348,7 @@ class Game {
 
                 this.tempMove = validMove;
                 
-                // Update UI: Sembunyikan pilihan, minta Player 2 main
+                //Sembunyikan pilihan, minta Player 2 main
                 document.getElementById("result_text").textContent = "Giliran Player 2! (Pilihan P1 terkunci)";
                 document.getElementById("p1_move_icon").textContent = "🔒";
                 document.getElementById("p2_move_icon").textContent = "👤";
@@ -435,7 +434,7 @@ class Game {
     }
 }
 
-// --- UI Controller ---
+// UI Control
 let myGame = new Game();
 
 const moveFactory = {
@@ -521,4 +520,5 @@ function animateHands() {
 }
 </script>
 </body>
+
 </html>
